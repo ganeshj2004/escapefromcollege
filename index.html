@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault Workflow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      position: relative;
+    }
+
+    /* Background Video */
+    video.background-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* Header styling */
+    .animated-header {
+      position: absolute;
+      top: 40px;
+      text-align: center;
+      color: red;
+      font-family: 'Creepster', cursive;
+      font-size: 5rem;
+      text-shadow: 2px 2px 5px black;
+      z-index: 1;
+    }
+
+     
+
+    /* Vault container */
+    .vault-container {
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      z-index: 1;
+    }
+
+    .input-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    input[type="number"] {
+      width: 70px;
+      padding: 12px;
+      font-size: 1.5rem;
+      border-radius: 5px;
+      border: 2px solid #34495e;
+      text-align: center;
+      outline: none;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      color: white;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 1.2rem;
+    }
+
+    /* Timer container */
+    .timer-container {
+      font-size: 2rem;
+      color: white;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px solid red; /* Red border */
+      border-radius: 10px;
+    }
+
+
+    .timer {
+      font-size: 2rem;
+      color: red; /* Red text color */
+      font-weight: bold; /* Bold text */
+    }
+
+
+    /* Pop-up Video Styling */
+    #popup-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .popup-content {
+      background-color: #141313;
+      padding: 0px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #popup-video-player {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Video -->
+  <video class="background-video" autoplay loop muted>
+    <source src="videos/Untitled video - Made with Clipchamp.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- Animated Header -->
+  <div class="animated-header">Escape From College</div>
+
+  <!-- Timer Container -->
+  <div class="timer-container">
+    <div class="timer">
+      <span class="timer-prefix">🕒</span>
+      <span id="timer">05:00:00</span>
+    </div>
+  </div>
+
+  <!-- Vault Container -->
+  <div class="vault-container">
+    <h1>Enter the Vault PINs</h1>
+    <div class="input-row">
+      <input type="number" id="box1" maxlength="1" disabled />
+      <input type="number" id="box2" maxlength="1" disabled />
+      <input type="number" id="box3" maxlength="1" disabled />
+      <input type="number" id="box4" maxlength="1" disabled />
+    </div>
+    <button onclick="startGame()">Start</button>
+    <button onclick="resetGame()">Reset</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <!-- Pop-up Video Container -->
+  <div id="popup-video">
+    <div class="popup-content">
+      <video id="popup-video-player" controls>
+        <source src="" type="video/mp4">
+      </video>
+    </div>
+  </div>
+
+  <script>
+    const pins = ["2", "4", "4", "3"];
+    let hours = 5, minutes = 0, seconds = 0;
+    let timerInterval;
+    const wrongAnswerVideos = [
+      "videos/Loss 1.mp4",
+      "videos/Loss 2.mp4",
+      "videos/Loss 3.mp4",
+      "videos/Loss 4.mp4",
+      "videos/Loss 5.mp4",
+      "videos/Loss 6.mp4",  
+    ];
+    const winningVideos = [
+      "videos/Winning clip.mp4",
+      "videos/Winning clip 2.mp4",
+      "videos/Winning clip 3.mp4",
+      "videos/Winning clip 4.mp4",
+    ];
+    let currentStage = 0;
+
+    function startGame() {
+      document.getElementById("box1").disabled = false;
+      document.getElementById("message").textContent = "Stage 1: Enter the correct PIN!";
+      currentStage = 1;
+      startTimer(); // Start the countdown when the game begins
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (seconds === 0) {
+          if (minutes === 0) {
+            if (hours === 0) {
+              clearInterval(timerInterval);
+              document.getElementById("timer").textContent = "Time's Up!";
+            } else {
+              hours--;
+              minutes = 59;
+              seconds = 59;
+            }
+          } else {
+            minutes--;
+            seconds = 59;
+          }
+        } else {
+          seconds--;
+        }
+        
+        // Format the timer as hh:mm:ss
+        document.getElementById("timer").textContent = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
+      }, 1000); // Update the timer every second
+    }
+
+    function formatTime(time) {
+      return time < 10 ? `0${time}` : time;
+    }
+    function resetGame() {
+  // Reset only the inputs and message in the vault-container, without affecting the timer
+  document.getElementById("box1").value = "";
+  document.getElementById("box2").value = "";
+  document.getElementById("box3").value = "";
+  document.getElementById("box4").value = "";
+  document.getElementById("box1").disabled = true;
+  document.getElementById("box2").disabled = true;
+  document.getElementById("box3").disabled = true;
+  document.getElementById("box4").disabled = true;
+
+  // Clear the message text inside the vault-container
+  document.getElementById("message").textContent = "";
+
+  // You don't need to reset the timer as it will continue running as is
+}
+setTimeout(() => {
+      document.getElementById("header").classList.add("stopped");
+    }, 4000); // Matches the duration of the typing animation
+
+    document.getElementById("box1").addEventListener("input", function () {
+      validateInput(this, 1);
+    });
+
+    document.getElementById("box2").addEventListener("input", function () {
+      validateInput(this, 2);
+    });
+
+    document.getElementById("box3").addEventListener("input", function () {
+      validateInput(this, 3);
+    });
+
+    document.getElementById("box4").addEventListener("input", function () {
+      validateInput(this, 4);
+    });
+
+
+    document.querySelectorAll("input[type='number']").forEach((input, index) => {
+      input.addEventListener("input", function () {
+        validateInput(this, index + 1);
+      });
+    });
+
+    function validateInput(inputBox, stage) {
+      const enteredValue = inputBox.value;
+      const messageDiv = document.getElementById("message");
+      if (enteredValue === pins[stage - 1]) {
+        messageDiv.style.color = "lime";
+        messageDiv.textContent = `🎉 Correct PIN for Stage ${stage}!`;
+
+        inputBox.disabled = true;
+        inputBox.type = "password";
+
+        const randomWinningVideo = winningVideos[Math.floor(Math.random() * winningVideos.length)];
+        playVideo(randomWinningVideo, () => {
+          if (stage < 4) {
+            const nextBox = document.getElementById(`box${stage + 1}`);
+            nextBox.disabled = false;
+            nextBox.focus();
+          } else {
+            window.location.href = "cong.html";
+          }
+        });
+      } else {
+        messageDiv.style.color = "red";
+        messageDiv.textContent = `❌ Incorrect PIN for Stage ${stage}. Try Again.`;
+
+        inputBox.value = "";
+
+        const randomWrongVideo = wrongAnswerVideos[Math.floor(Math.random() * wrongAnswerVideos.length)];
+        playVideo(randomWrongVideo);
+      }
+    }
+
+    function playVideo(videoSource, callback = null) {
+      const popup = document.getElementById("popup-video");
+      const videoPlayer = document.getElementById("popup-video-player");
+
+      popup.style.display = "flex";
+      videoPlayer.src = videoSource;
+      videoPlayer.play();
+
+      videoPlayer.onended = () => {
+        popup.style.display = "none";
+        videoPlayer.src = "";
+        if (callback) callback();
+      };
+    }
+  </script>
+
+<script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    alert("Right-click is disabled on this website.");
+  });
+</script>
+
+</body>
+</html>
